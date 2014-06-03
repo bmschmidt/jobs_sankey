@@ -1,267 +1,74 @@
-    <style>
-    .node rect {
-        cursor: move;
-        fill-opacity: .9;
-        shape-rendering: crispEdges;
-    }
-    .node text {
-        pointer-events: none;
-        text-shadow: 0 1px 0 #fff;
-    }
-    .link {
-        fill: none;
-        stroke: #000;
-        stroke-opacity: .2;
-    }
-    .link:hover {
-        stroke-opacity: .5;
-    }
+<style>
+  .node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+  }
+  .node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+  }
+  .link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+  }
+  .link:hover {
+  stroke-opacity: .5;
+  }
 </style>
-    <script>
+<script>
 
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-4871207-9']);
-_gaq.push(['_trackPageview']);
-//see below for the actual loading.
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-4871207-9']);
+  _gaq.push(['_trackPageview']);
+  //see below for the actual loading.
 </script>
 
 
-    <body>
-    <h1>What are you going to do with that degree?</h1>
-<h3>Jobs by college major</h3>
-This is a quick
-    <a href=http://en.wikipedia.org/wiki/Sankey_diagram>Sankey
-visualization</a> of how college majors relate to professions, based
-on data from the American Community survey. On the left are the larget
-college majors; to the right are the most common professions.<br><br>
-To see broad fields like "Sciences" and "Humanities", see the <a href=http://benschmidt.org/jobsBroad>edited version of this page.</a>
-<br><br>
+<body>
+  <h1>What are you going to do with that degree?</h1>
+  <h3>Jobs by college major</h3>
+  This is a quick
+  <a href=http://en.wikipedia.org/wiki/Sankey_diagram>Sankey
+    visualization</a> of how college majors relate to professions, based
+  on data from the American Community survey. On the left are the largest
+  college majors; to the right are the most common professions.<br><br>
+  To see broad fields like "Sciences" and "Humanities", see the <a href=http://benschmidt.org/jobsBroad>edited version of this page.</a>
+  <br><br>
 
-    The width of each stream shows how many people with that major are in
-that field. (The color shows whether that's more or fewer people than
-expected based on how big the major is: hover over to see just how many more it is.)
-    The width of each stream shows how many people with that major are in
-that field. (The color shows whether that's more or fewer people than
-expected based on how big the major is).
-<br><br>
-You surely see that the lines are too small to understand in most
-cases: <strong> to actually see what's going on with a particular field or job, double click on a box
-             and the chart will filter down to just the people who either majored
-             in the field, or ended up employed in the job. </strong> (click on one of the connecting lines to see both at once)
-             <br><br>
-             I have not developed this that far because I am not sure how useful it
-             ultimately is: my basic goal was a quick way to see, for example, what
-             jobs history majors ended up in. (Largest is lawyers, but also
-                                               schoolteachers; what you would expect, but worth knowing.)
-<br><br>
-	     <em>You might also like my <a href=http://benschmidt.org/Degrees>visualization of changing college degrees over time.</a></em>
-             <p id="chart">
+  The width of each stream shows how many people with that major are in
+  that field. (The color shows whether that's more or fewer people than
+  expected based on how big the major is: hover over to see just how many more it is.)
+  The width of each stream shows how many people with that major are in
+  that field. (The color shows whether that's more or fewer people than
+  expected based on how big the major is).
+  <br><br>
+  You surely see that the lines are too small to understand in most
+  cases:
+  <strong> to actually see what's going on with a particular field or job, click on a box and the chart will filter down to just the people who either majored in the field, or ended up employed in the job. </strong>
+  (Click on one of the connecting lines to see both at once.)
+  <br><br>
+  I have not developed this that far because I am not sure how useful it
+  ultimately is: my basic goal was a quick way to see, for example, what
+  jobs history majors ended up in. (Largest is lawyers, but also
+  schoolteachers; what you would expect, but worth knowing.)
+  <br><br>
+  <em>You might also like my <a href=http://benschmidt.org/Degrees>visualization of changing college degrees over time.</a></em>
+  <p id="chart">
 
-             Made by <a href=http://benschmidt.org>Ben Schmidt</a>
-             using <a href=http://d3js.org>D3</a>; heavily reusing code from <a href=http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html>here.</a>
-
-
-             <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-             <script src="sankey.js"></script>
-             <script>
-
-             var duration = 2000;
-
-             var units = "People";
-
-             var margin = {top: 10, right: 30, bottom: 30, left: 10};
-
-             var width=window.innerWidth-margin.left-margin.right;
-             var height=3000; 
-
-             //var width = 700 - margin.left – margin.right;
-             //var height = 300 - margin.top – margin.bottom;
-
-             var formatNumber = d3.format(",.0f"),    // zero decimal places
-             format = function(d) { return formatNumber(d) + " " + units; },
-             color = d3.scale.category20();
-
-             // append the svg canvas to the page
-             var svg = d3.select("#chart").append("svg")
-             .attr("width", width + margin.left + margin.right)
-             .attr("height", height + margin.top + margin.bottom)
-             .append("g")
-             .attr("transform",
-                   "translate(" + margin.left + "," + margin.top + ")");
-
-             var linkset = svg.append("g").attr("id","linkSet")
-             // Set the sankey diagram properties
-             var state;
-             relayout = function(maindata,filter) {
-                 filter = filter || function() {return true}
-                 var data = maindata.filter(filter)
-                 var graph = {"nodes" : [], "links" : []};
-
-                 data.forEach(function (d) {
-                     graph.nodes.push({ "name": d.field });
-                     graph.nodes.push({ "name": d.occupation });
-                     graph.links.push({ "source": d.field,
-                                        "target": d.occupation,
-                                        "value": d.count,
-                                        "diff":d.diff}
-                                     );
-                 });
-
-                 // return only the distinct / unique nodes
-                 graph.nodes = d3.keys(d3.nest()
-                                       .key(function (d) { return d.name; })
-                                       .map(graph.nodes));
-
-                 // loop through each link replacing the text with its index from node
-                 graph.links.forEach(function (d, i) {
-                     graph.links[i].source = graph.nodes.indexOf(graph.links[i].source);
-                     graph.links[i].target = graph.nodes.indexOf(graph.links[i].target);
-                 });
-
-                 //now loop through each nodes to make nodes an array of objects
-                 // rather than an array of strings
-                 graph.nodes.forEach(function (d, i) {
-                     graph.nodes[i] = { "name": d };
-                 });
-
-                 var sankey = d3.sankey()
-                     .nodeWidth(42)
-                     .nodePadding(6)
-                     .size([width, height]);
-
-                 var path = sankey.link();
-
-                 sankey
-                     .nodes(graph.nodes)
-                     .links(graph.links)
-                     .layout(32);
-
-                 linkColor = d3.scale.log().domain([.1,1,10]).range(["red","grey","blue"])
-
-                 // add in the links
-
-                 //    d3.selectAll(".link").remove()
-                 //    d3.selectAll(".node").remove()
-
-                 var link = linkset.selectAll(".link")
-                     .data(graph.links,function(d) {return d.source.name + "-" + d.target.name})
-
-	     resetSizeDown = function() {
-	     height = window.innerHeight*.9
-	     svg.attr("height",window.innerHeight*.9)
-	     sankey.size([width,height])
-	     }
-
-                 link
-                     .enter().append("path")
-                     .attr("class", "link")
-                     .attr("d", path)
-                     .on("click",function(d) {
-	     resetSizeDown()
-                         relayout(maindata,filter=function(e) {
-                             return e.field==d.source.name || e.occupation==d.source.name || e.field==d.target.name || e.occupation==d.target.name
-                         })
-                     })
-                     .append("title")
-                     .text(function(d) {
-                         return d.source.name + " majors going into " +
-                             d.target.name + "\n" + format(d.value) + " (" +  .01*Math.round(d.diff*100) + " times as many as expected based on counts)"; });
-
-                 link
-                     .transition().duration(duration)
-                     .attr("d",path)
-                     .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-                     .style("stroke",function(d) {return linkColor(d.diff)})
-                     .sort(function(a, b) { return b.dy - a.dy; })
-
-                 link.exit().remove()
-                 // add the link titles
-
-                 // add in the nodes
-                 var node = svg.selectAll(".node")
-                     .data(graph.nodes,function(d) {return d.name})
-
-                 entering = node.enter()
-                     .append("g")
+    Made by <a href=http://benschmidt.org>Ben Schmidt</a>
+    using <a href=http://d3js.org>D3</a>; heavily reusing code from <a href=http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html>here.</a>
 
 
-                 entering
-                     .attr("transform", function(d) {
-                         return "translate(" + d.x + "," + d.y + ")"; })
-                     .attr("class", "node")
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="sankey.js"></script>
+    <script src="jobs.js">
 
-		 entering
-                     .append("title")
-                     .append("text")
-                     .text(function(d) {
-                         return d.name + "\n" + format(d.value); })
-
-                 entering
-                     .append("rect")
-                     .on("click",function(d) {
-	                 resetSizeDown()
-                         relayout(maindata,filter=function(e) {
-                             return e.field==d.name || e.occupation==d.name
-                         })
-                     })
-                     .style("fill", function(d) {
-	     return d.color = industryColors(d.name.split("-")[0])
-                         return d.color = color(d.name.replace(/ .*/, "")); })
-                     .style("stroke", function(d) {
-                         return d3.rgb(d.color).darker(2); })
-                     .attr("height", function(d) { return d.dy; })
-
-                 entering.append("text")
-          	     .attr("class","label")
-                     .attr("x", -6)
-                     .attr("dy", ".35em")
-                     .attr("text-anchor", "end")
-	     .attr("font-size","11px")
-                     .attr("transform", null)
-                     .text(function(d) { return d.name; })
-                     .filter(function(d) { return d.x < width / 2; })
-                     .attr("x", 6 + sankey.nodeWidth())
-                     .attr("text-anchor", "start")
-
-                 node
-                     .transition()
-                     .duration(duration)
-                     .attr("transform", function(d) {
-                         return "translate(" + d.x + "," + d.y + ")"; })
-
-                 // add the rectangles for the nodes
-		 node
-                     .selectAll("rect")
-                     .transition()
-                     .duration(duration)
-                     .attr("height", function(d) {return d3.max([2,this.parentNode.__data__.dy])})
-                     .attr("width", sankey.nodeWidth())
-
-
-		d3
-		     .selectAll("text.label")
-		     .transition().duration(duration)
-		     .attr("y", function(d) { return this.parentNode.__data__.dy / 2; })
-
-
-                 node.exit().remove()
-                 // add in the title for the nodes
-
-             }
-             // load the data
-             d3.tsv("data.tsv", function(error, data) {
-							var dat = data
-							industries = d3.set(dat.map(function(d) {return d.occupation.split("-")[0]})).values()
-							industryColors = d3.scale.category20().domain(industries)
-                 //from http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
-                 relayout(data,filter=function(d) {return true})
-             });
-
-             </script>
-             </script>
-             <script type="text/javascript">  (function() {
-                 var ga = document.createElement('script');     ga.type = 'text/javascript'; ga.async = true;
-                 ga.src = ('https:'   == document.location.protocol ? 'https://ssl'   : 'http://www') + '.google-analytics.com/ga.js';
-                 var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-             })();
-             </script>
+    </script>
+    <script type="text/javascript">  (function() {
+      var ga = document.createElement('script');     ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:'   == document.location.protocol ? 'https://ssl'   : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
