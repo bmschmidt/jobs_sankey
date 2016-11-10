@@ -66,6 +66,7 @@ relayout = function(maindata,filter) {
 
     resetSizeDown = function() {
         height = window.innerHeight*.9
+	d3.select("svg").transition().duration(duration).attr("height",window.innerHeight)
         svg.attr("height",window.innerHeight*.9)
         sankey.size([width,height])
     }
@@ -96,7 +97,7 @@ relayout = function(maindata,filter) {
     link
         .transition()
 	.duration(duration)
-        .style("opacity",.7)
+        .style("opacity",.9)
         .attr("d",path)
         .style("stroke-width", function(d) { return Math.max(1, d.dy); })
 
